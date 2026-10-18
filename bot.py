@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Gemini Client Initialization Check
+# Gemini Client Initialization
 if not GEMINI_API_KEY:
     print("❌ CRITICAL ERROR: GEMINI_API_KEY is missing or empty!")
 
@@ -172,7 +172,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-# Gemini AI Message Handler (Showing exact error on Telegram for debugging)
+# Gemini AI Message Handler (Updated to gemini-2.5-flash)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
@@ -186,7 +186,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = ai_client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents=user_text,
         )
         reply_text = response.text if response.text else "Sorry, main iska jawab nahi de paaya."
@@ -195,8 +195,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         err_msg = str(e)
         logging.error(f"Gemini API Error: {err_msg}")
-        # Yahan ab exact error message dikhega taaki pata chale problem kya hai
-        await update.message.reply_text(f"⚠️ **Exact Gemini Error:**\n<code>{html.escape(err_msg)}</code>", parse_mode="HTML")
+        await update.message.reply_text(f"⚠️ **Gemini Error:**\n<code>{html.escape(err_msg)}</code>", parse_mode="HTML")
 
 
 def main():
