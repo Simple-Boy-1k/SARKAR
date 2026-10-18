@@ -1,0 +1,68 @@
+{
+  "name": "deep-emotions-telegram-bot",
+  "description": "Deep Emotions Telegram AI chatbot",
+  "repository": "https://github.com/Simple-Boy-1k/Deep-Emotion",
+  "keywords": [
+    "telegram",
+    "python",
+    "gemini",
+    "ai"
+  ],
+  "stack": "heroku-24",
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Telegram bot token from @BotFather",
+      "required": true
+    },
+    "GEMINI_API_KEY": {
+      "description": "Google Gemini API key",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Telegram numeric user ID of the bot owner (optional; use 0 if unused)",
+      "value": "0",
+      "required": false
+    },
+    "GEMINI_MODEL": {
+      "description": "Gemini model name",
+      "value": "gemini-2.5-flash",
+      "required": false
+    },
+    "SUPPORT_CHAT_URL": {
+      "description": "Support chat Telegram link, e.g. https://t.me/YourSupportBot",
+      "value": "",
+      "required": false
+    },
+    "SUPPORT_CHANNEL_URL": {
+      "description": "Support channel Telegram link, e.g. https://t.me/YourSupportChannel",
+      "value": "",
+      "required": false
+    },
+    "UPDATES_CHANNEL_URL": {
+      "description": "Updates channel Telegram link",
+      "value": "https://t.me/deep_emotions_01",
+      "required": false
+    },
+    "START_IMAGE_URL": {
+      "description": "Direct URL of the start/welcome image",
+      "value": "https://raw.githubusercontent.com/AashishTechs/Deep-Emotion/main/Welcome.jpg?v=2",
+      "required": false
+    },
+    "OUR_BOTS_URL": {
+      "description": "Optional link to your other bots",
+      "value": "",
+      "required": false
+    },
+    "OWNER_USERNAME": {
+      "description": "Optional owner username without @; leave blank to hide owner username",
+      "value": "",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
+}
