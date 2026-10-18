@@ -1,7 +1,10 @@
 import os
 import html
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+import random
+import re
+import time
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 from telegram.constants import ChatAction
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from google import genai
@@ -33,11 +36,10 @@ def _btn(text, *, callback_data=None, url=None, style=None):
 
 
 def _welcome_caption(bot_name):
-    safe_name = html.escape(bot_name or "Gemini AI")
+    safe_name = html.escape(bot_name or "Deep Emotions")
     return (
-        f"✨ ʜɪ ʜᴇʟʟᴏ, ɪ'ᴍ <b>{safe_name}</b> 🤖💗\n\n"
-        "Your friendly AI companion for chat, memory, games and everyday help. 🌸✨\n\n"
-        "💬 Natural Chat • 🧠 Smart Responses • ⚡ Fast Replies 🚀\n\n"
+        f"✨ Hii everyone, I'm <b>{safe_name}</b> 💖🌸\n\n"
+        "Aapki pyari AI companion! Mujhse chat karo, games khelo ya baatein karo. ✨\n\n"
         "Choose an option below and let's get started. 👇"
     )
 
@@ -67,7 +69,7 @@ def main_menu_keyboard(bot_username="bot", is_owner=False):
     rows.append([_btn("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ", url=f"https://t.me/{username}?startgroup=true", style="primary")])
     
     if is_owner:
-        rows.append([_btn("👑 ᴏᴡɴᴇʀ ᴘᴀɴᴇﾙ", callback_data="owner_panel", style="danger")])
+        rows.append([_btn("👑 ᴏᴡɴᴇʀ ᴘᴀɴᴇʟ", callback_data="owner_panel", style="danger")])
     
     return InlineKeyboardMarkup(rows)
 
@@ -76,18 +78,12 @@ def main_menu_keyboard(bot_username="bot", is_owner=False):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
-
     me = await context.bot.get_me()
-    bot_username = me.username or "bot"
-    bot_name = me.first_name or "Gemini AI"
-    user = update.effective_user
-    is_owner = bool(user and OWNER_ID != 0 and user.id == OWNER_ID)
-
     await update.message.reply_photo(
         photo=START_IMAGE_URL,
-        caption=_welcome_caption(bot_name),
+        caption=_welcome_caption(me.first_name),
         parse_mode="HTML",
-        reply_markup=main_menu_keyboard(bot_username, is_owner=is_owner),
+        reply_markup=main_menu_keyboard(me.username, is_owner=(bool(update.effective_user and update.effective_user.id == OWNER_ID))),
     )
 
 
@@ -95,13 +91,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
-    text = (
-        "💗 **Gemini Bot — Help & Commands**\n\n"
-        "• `/start` - Open welcome panel ✨\n"
-        "• `/clear` - Clear chat context 🧹\n"
-        "• Bas kuch bhi message bhejo aur aaram se baat karo! 😊"
-    )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text("💗 **Help Menu:**\n\n• Group mein mujhe tag karke ya reply karke baat karo ✨\n• Owner ya group ke baare mein poochho! 🌸", parse_mode="Markdown")
 
 
 # Command: /clear
@@ -109,7 +99,7 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
     context.user_data.clear()
-    await update.message.reply_text("🧹 Chat context bilkul clean kar diya gaya hai dost! ✨")
+    await update.message.reply_text("🧹 Sab saaf kar diya! Chalo ab naye sire se baatein karte hain ✨")
 
 
 # Button Handler
@@ -117,26 +107,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     if not query or not query.message:
         return
-
     data = query.data
-    if data == "owner_panel" and (OWNER_ID == 0 or query.from_user.id != OWNER_ID):
-        await query.answer("⛔ Yeh panel sirf bot owner ke liye hai!", show_alert=True)
-        return
-
     await query.answer()
 
-    if data == "owner_panel":
-        if query.message.photo:
-            await query.edit_message_caption(
-                caption=f"👑 **Owner Panel**\n\nOwner ID: `{OWNER_ID}`\nBot ekdum mast chal raha hai! 🚀",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([[_btn("🔙 ʙᴀᴄᴋ", callback_data="home", style="danger")]]),
-            )
-        return
-
-    if data in {"home", "back"}:
+    if data == "home":
         me = await context.bot.get_me()
-        text = _welcome_caption(me.first_name or "Gemini AI")
         try:
             await query.message.delete()
         except Exception:
@@ -144,35 +119,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_photo(
             chat_id=query.message.chat.id,
             photo=START_IMAGE_URL,
-            caption=text,
+            caption=_welcome_caption(me.first_name),
             parse_mode="HTML",
-            reply_markup=main_menu_keyboard(
-                me.username,
-                is_owner=(OWNER_ID != 0 and query.from_user.id == OWNER_ID),
-            ),
+            reply_markup=main_menu_keyboard(me.username, is_owner=(query.from_user.id == OWNER_ID)),
         )
-        return
-
-    if data == "help_main":
-        if query.message.photo:
-            await query.edit_message_caption(
-                caption="💗 **Help Section**\n\nCommands use karo ya seedha chat mein baat karo! ✨",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([[_btn("🔙 ʙᴀᴄᴋ", callback_data="home", style="danger")]]),
-            )
-        return
-
-    if data == "chat":
-        if query.message.photo:
-            await query.edit_message_caption(
-                caption="💬 **Chat With Me**\n\nAb aap mujhe koi bhi lamba ya chhota message bhej sakte hain! Main bilkul insano ki tarah jawab dungi. 🌸",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([[_btn("🔙 ʙᴀᴄᴋ", callback_data="home", style="danger")]]),
-            )
-        return
 
 
-# Helper function to send long messages safely (preventing Telegram 4096 char limit error)
+# Safe Long Message Sender
 async def send_long_message(update: Update, text: str):
     if not text:
         return
@@ -183,86 +136,102 @@ async def send_long_message(update: Update, text: str):
             await update.message.reply_text(text[i:i+4000])
 
 
-# Sticker Handler (Jab koi group ya private mein sticker dale)
+# Smart Sticker Reply Handler (Group/Private me Tag karke sticker reply)
 async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.sticker:
         return
     
-    # Human-like cute sticker response with emojis
+    user = update.effective_user
     responses = [
-        "🔥 Arre kya mast sticker hai bhai! 😎✨",
-        "uff yeh sticker! 🤭❤️",
-        "Aha! Sahi sticker bheja hai 🤌🔥",
-        "Mast sticker hai bro! 🚀💯",
-        "Haha nice one! 🌸✨"
+        f"Awww {user.first_name}, kitna cute sticker hai! 🥺💖",
+        f"Uff {user.first_name}! Aise stickers kahan se laate ho? 🤭✨",
+        f"Haha {user.first_name}, mast sticker tha yeh toh! 🤌🔥",
+        f"Aha! {user.first_name} ji, sahi hai ekdum! 🚀💯"
     ]
-    import random
+    
+    # Sticker sender ko reply/tag karke text response
     await update.message.reply_text(random.choice(responses))
 
 
-# Gemini AI Message Handler (Optimized, Human-like, Emoji-rich & Error Proof)
+# Smart Group & Private Message Handler
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
 
-    user_text = update.message.text.strip()
-    await update.message.chat.send_action(ChatAction.TYPING)
+    text = update.message.text.strip()
+    chat = update.effective_chat
+    user = update.effective_user
 
-    if not GEMINI_API_KEY:
-        await update.message.reply_text("❌ **Error:** `GEMINI_API_KEY` set nahi hai Heroku config vars mein!")
+    if not chat or not user:
         return
 
+    me = await context.bot.get_me()
+    bot_username = (me.username or "").lower()
+
+    is_private = chat.type == "private"
+    mentioned = f"@{bot_username}" in text.lower() if bot_username else False
+    replied_to_bot = (
+        update.message.reply_to_message is not None
+        and update.message.reply_to_message.from_user is not None
+        and update.message.reply_to_message.from_user.id == me.id
+    )
+
+    # Agar group hai aur bot ko tag/reply nahi kiya gaya, toh chup rahegi
+    if not is_private and not mentioned and not replied_to_bot:
+        return
+
+    # Tag remove karo text se
+    if mentioned and bot_username:
+        text = re.sub(rf"@{re.escape(bot_username)}", "", text, flags=re.IGNORECASE).strip()
+
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    owner_handle = f"@{OWNER_USERNAME}" if OWNER_USERNAME else "Not Set"
+
     try:
-        # Human-like prompting context for Gemini
-        system_instruction = (
-            "You are a friendly, cool, and expressive human-like AI companion on Telegram. "
-            "Talk naturally like a close friend, use Hinglish or English based on the user's style, "
-            "and add cool emojis (like ✨, 🌸, 🚀, 🔥, 😊, ❤️) naturally in your sentences. "
-            "Match the user's vibe and reply engagingly."
+        # Ladki ki vibe, Bad Words Handler aur Samjhaane wala Prompt
+        system_prompt = (
+            f"You are a sweet, smart, and expressive Indian girl AI named {me.first_name} on Telegram. "
+            f"Talk like a natural human girl in Hinglish or English using emojis like ✨, 🌸, 🥺, 🙈, 💖, ✌️. "
+            f"Always address the user by their name ({user.first_name}). "
+            f"IMPORTANT RULE FOR BAD WORDS/ABUSE: If the user ({user.first_name}) uses abusive language, vulgar words, or toxic slangs, DO NOT get angry or use bad language back. Instead, politely and gently scold/teach them like a sensible girl (e.g., '{user.first_name}, aisi gandi baatein nahi bolte na! Achhe bacche achhi bhasha use karte hain 🥺🌸. Aage se aise mat bolna please!'). "
+            f"GROUP OWNER INFO: The group owner username is {owner_handle}. If anyone asks who the owner or admin is, tell them politely that {owner_handle} is the owner."
         )
-        
-        full_prompt = f"{system_instruction}\n\nUser Message: {user_text}"
+
+        full_prompt = f"{system_prompt}\n\nUser ({user.first_name}) says: {text}"
 
         response = ai_client.models.generate_content(
             model="gemini-3.8-flash",
             contents=full_prompt,
         )
         
-        reply_text = response.text if response.text else "Arre arre, kuch samajh nahi aaya, thoda doosre tarike se bolo na! 😅✨"
-        
-        # Send long messages safely without crashing
+        reply_text = response.text if response.text else f"Arre {user.first_name}, samajh nahi aaya kya bol rahe ho! 🙈✨"
         await send_long_message(update, reply_text)
 
     except Exception as e:
-        err_msg = str(e)
-        logging.error(f"Gemini API Error: {err_msg}")
-        
-        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
-            await update.message.reply_text("⏳ Arre yaar, bohot saari requests aa gayi hain! Thoda sa slow ho jao na, 1 minute baad try karna! 😅🙏")
-        else:
-            await update.message.reply_text("💗 Oops! Thoda sa connection issue ho gaya hai, ek baar phir se message bhejo na please! ✨")
+        logging.error(f"Gemini Error: {e}")
+        await update.message.reply_text(f"Arre yaar {user.first_name}, thoda network issue ho gaya hai, baad mein baat karte hain na! 🥺💔")
 
 
 def main():
     if not BOT_TOKEN or not GEMINI_API_KEY:
-        print("❌ Error: BOT_TOKEN ya GEMINI_API_KEY missing hai!")
+        print("❌ Error: Token or API Key missing!")
         return
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("clear", clear))
     app.add_handler(CallbackQueryHandler(button_handler))
     
-    # Sticker Handler
+    # Sticker Handler (Tag & Reply with Reactions)
     app.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
     
-    # Text Handler
+    # Text Message Handler
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    print("🤖 Gemini Telegram Bot successfully start ho gaya hai! ✨")
+    print("🤖 Smart Girl AI Bot successfully start ho gaya hai! ✨🌸")
     app.run_polling()
 
 
