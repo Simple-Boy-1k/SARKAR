@@ -1,6 +1,6 @@
 # 𝐒𝐚𝐫𝐤𝐚𝐫
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Simple-Boy-1k/Deep-Emotion)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Simple-Boy-1k/SARKAR)
 
 Telegram + Gemini AI chatbot with long-term memory,
 group conversation context, AI tools, voice support,
