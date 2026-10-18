@@ -18,7 +18,10 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Gemini Client Initialization
+# Gemini Client Initialization Check
+if not GEMINI_API_KEY:
+    print("❌ CRITICAL ERROR: GEMINI_API_KEY is missing or empty!")
+
 ai_client = genai.Client(api_key=GEMINI_API_KEY)
 
 
@@ -169,13 +172,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-# Gemini AI Message Handler (Updated with gemini-1.5-flash & error checks)
+# Gemini AI Message Handler (Showing exact error on Telegram for debugging)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
 
     user_text = update.message.text.strip()
     await update.message.chat.send_action(ChatAction.TYPING)
+
+    if not GEMINI_API_KEY:
+        await update.message.reply_text("❌ **Error:** `GEMINI_API_KEY` is empty or not set in Heroku Config Vars!")
+        return
 
     try:
         response = ai_client.models.generate_content(
@@ -188,13 +195,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         err_msg = str(e)
         logging.error(f"Gemini API Error: {err_msg}")
-        
-        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "Quota" in err_msg:
-            await update.message.reply_text("⏳ **Rate Limit Exceeded!**\nFree tier ki limit khatam ho gayi hai. Thodi der baad try karein.")
-        elif "API_KEY_INVALID" in err_msg or "400" in err_msg:
-            await update.message.reply_text("🔑 **Invalid API Key!**\nKripya apni sahi Gemini API Key check karein.")
-        else:
-            await update.message.reply_text("⚠️ AI service se connect hone mein error aaya. Kripya thodi der baad try karein.")
+        # Yahan ab exact error message dikhega taaki pata chale problem kya hai
+        await update.message.reply_text(f"⚠️ **Exact Gemini Error:**\n<code>{html.escape(err_msg)}</code>", parse_mode="HTML")
 
 
 def main():
