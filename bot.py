@@ -169,7 +169,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-# Gemini AI Message Handler
+# Gemini AI Message Handler (Updated with gemini-1.5-flash & error checks)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
@@ -179,15 +179,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = ai_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=user_text,
         )
         reply_text = response.text if response.text else "Sorry, main iska jawab nahi de paaya."
         await update.message.reply_text(reply_text)
 
     except Exception as e:
-        logging.error(f"Gemini API Error: {e}")
-        await update.message.reply_text("⚠️ AI service se connect hone mein error aaya. Kripya thodi der baad try karein.")
+        err_msg = str(e)
+        logging.error(f"Gemini API Error: {err_msg}")
+        
+        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "Quota" in err_msg:
+            await update.message.reply_text("⏳ **Rate Limit Exceeded!**\nFree tier ki limit khatam ho gayi hai. Thodi der baad try karein.")
+        elif "API_KEY_INVALID" in err_msg or "400" in err_msg:
+            await update.message.reply_text("🔑 **Invalid API Key!**\nKripya apni sahi Gemini API Key check karein.")
+        else:
+            await update.message.reply_text("⚠️ AI service se connect hone mein error aaya. Kripya thodi der baad try karein.")
 
 
 def main():
