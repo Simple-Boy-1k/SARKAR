@@ -172,7 +172,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-# Gemini AI Message Handler (Updated to gemini-2.5-flash)
+# Gemini AI Message Handler (Updated to gemini-3.8-flash)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
@@ -186,7 +186,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = ai_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=user_text,
         )
         reply_text = response.text if response.text else "Sorry, main iska jawab nahi de paaya."
