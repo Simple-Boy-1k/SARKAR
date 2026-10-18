@@ -1,10 +1,7 @@
 {
   "name": "Gemini AI Telegram Bot",
   "description": "A powerful Telegram AI chatbot powered by Google Gemini with custom styled inline buttons and support links.",
-  "repository": "https://github.com/yourusername/gemini-telegram-bot",
-  "logo": "https://raw.githubusercontent.com/AashishTechs/Deep-Emotion/main/Welcome.jpg?v=2",
   "keywords": ["telegram", "bot", "gemini", "ai", "python", "heroku"],
-  "stack": "container",
   "env": {
     "BOT_TOKEN": {
       "description": "Your Telegram Bot Token from @BotFather",
@@ -18,12 +15,12 @@
     },
     "OWNER_ID": {
       "description": "Your Telegram User ID (Numeric format, e.g. 123456789)",
-      "value": "8885285219",
+      "value": "0",
       "required": false
     },
     "OWNER_USERNAME": {
       "description": "Your Telegram username without @ symbol",
-      "value": "Sarkarowner1k",
+      "value": "",
       "required": false
     },
     "SUPPORT_CHAT_URL": {
