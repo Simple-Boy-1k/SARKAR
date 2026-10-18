@@ -35,9 +35,9 @@ def _btn(text, *, callback_data=None, url=None, style=None):
 def _welcome_caption(bot_name):
     safe_name = html.escape(bot_name or "Gemini AI")
     return (
-        f"✨ ʜɪ ʜᴇʟʟᴏ, ɪ'ᴍ <b>{safe_name}</b> 🤖\n\n"
-        "Your advanced AI assistant powered by Google Gemini. 🌸\n\n"
-        "💬 Natural Chat • 🧠 Smart Responses • ⚡ Fast Replies\n\n"
+        f"✨ ʜɪ ʜᴇʟʟᴏ, ɪ'ᴍ <b>{safe_name}</b> 🤖💗\n\n"
+        "Your friendly AI companion for chat, memory, games and everyday help. 🌸✨\n\n"
+        "💬 Natural Chat • 🧠 Smart Responses • ⚡ Fast Replies 🚀\n\n"
         "Choose an option below and let's get started. 👇"
     )
 
@@ -67,7 +67,7 @@ def main_menu_keyboard(bot_username="bot", is_owner=False):
     rows.append([_btn("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ", url=f"https://t.me/{username}?startgroup=true", style="primary")])
     
     if is_owner:
-        rows.append([_btn("👑 ᴏᴡɴᴇʀ ᴘᴀɴᴇʟ", callback_data="owner_panel", style="danger")])
+        rows.append([_btn("👑 ᴏᴡɴᴇʀ ᴘᴀɴᴇﾙ", callback_data="owner_panel", style="danger")])
     
     return InlineKeyboardMarkup(rows)
 
@@ -97,9 +97,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     text = (
         "💗 **Gemini Bot — Help & Commands**\n\n"
-        "• `/start` - Open welcome panel\n"
-        "• `/clear` - Clear chat context\n"
-        "• Just send any message to chat with Gemini AI!"
+        "• `/start` - Open welcome panel ✨\n"
+        "• `/clear` - Clear chat context 🧹\n"
+        "• Bas kuch bhi message bhejo aur aaram se baat karo! 😊"
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
@@ -109,7 +109,7 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
     context.user_data.clear()
-    await update.message.reply_text("🧹 Chat context reset kar diya gaya hai!")
+    await update.message.reply_text("🧹 Chat context bilkul clean kar diya gaya hai dost! ✨")
 
 
 # Button Handler
@@ -120,7 +120,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     data = query.data
     if data == "owner_panel" and (OWNER_ID == 0 or query.from_user.id != OWNER_ID):
-        await query.answer("⛔ This panel is only for the bot owner.", show_alert=True)
+        await query.answer("⛔ Yeh panel sirf bot owner ke liye hai!", show_alert=True)
         return
 
     await query.answer()
@@ -128,7 +128,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "owner_panel":
         if query.message.photo:
             await query.edit_message_caption(
-                caption=f"👑 **Owner Panel**\n\nOwner ID: `{OWNER_ID}`\nBot is running successfully!",
+                caption=f"👑 **Owner Panel**\n\nOwner ID: `{OWNER_ID}`\nBot ekdum mast chal raha hai! 🚀",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([[_btn("🔙 ʙᴀᴄᴋ", callback_data="home", style="danger")]]),
             )
@@ -156,7 +156,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "help_main":
         if query.message.photo:
             await query.edit_message_caption(
-                caption="💗 **Help Section**\n\nUse commands or chat directly with the AI bot.",
+                caption="💗 **Help Section**\n\nCommands use karo ya seedha chat mein baat karo! ✨",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([[_btn("🔙 ʙᴀᴄᴋ", callback_data="home", style="danger")]]),
             )
@@ -165,14 +165,42 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "chat":
         if query.message.photo:
             await query.edit_message_caption(
-                caption="💬 **Chat With Me**\n\nAb aap mujhe koi bhi message bhej sakte hain!",
+                caption="💬 **Chat With Me**\n\nAb aap mujhe koi bhi lamba ya chhota message bhej sakte hain! Main bilkul insano ki tarah jawab dungi. 🌸",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([[_btn("🔙 ʙᴀᴄᴋ", callback_data="home", style="danger")]]),
             )
         return
 
 
-# Gemini AI Message Handler (Updated to gemini-3.8-flash)
+# Helper function to send long messages safely (preventing Telegram 4096 char limit error)
+async def send_long_message(update: Update, text: str):
+    if not text:
+        return
+    if len(text) <= 4000:
+        await update.message.reply_text(text)
+    else:
+        for i in range(0, len(text), 4000):
+            await update.message.reply_text(text[i:i+4000])
+
+
+# Sticker Handler (Jab koi group ya private mein sticker dale)
+async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.sticker:
+        return
+    
+    # Human-like cute sticker response with emojis
+    responses = [
+        "🔥 Arre kya mast sticker hai bhai! 😎✨",
+        "uff yeh sticker! 🤭❤️",
+        "Aha! Sahi sticker bheja hai 🤌🔥",
+        "Mast sticker hai bro! 🚀💯",
+        "Haha nice one! 🌸✨"
+    ]
+    import random
+    await update.message.reply_text(random.choice(responses))
+
+
+# Gemini AI Message Handler (Optimized, Human-like, Emoji-rich & Error Proof)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
@@ -181,26 +209,43 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.chat.send_action(ChatAction.TYPING)
 
     if not GEMINI_API_KEY:
-        await update.message.reply_text("❌ **Error:** `GEMINI_API_KEY` is empty or not set in Heroku Config Vars!")
+        await update.message.reply_text("❌ **Error:** `GEMINI_API_KEY` set nahi hai Heroku config vars mein!")
         return
 
     try:
+        # Human-like prompting context for Gemini
+        system_instruction = (
+            "You are a friendly, cool, and expressive human-like AI companion on Telegram. "
+            "Talk naturally like a close friend, use Hinglish or English based on the user's style, "
+            "and add cool emojis (like ✨, 🌸, 🚀, 🔥, 😊, ❤️) naturally in your sentences. "
+            "Match the user's vibe and reply engagingly."
+        )
+        
+        full_prompt = f"{system_instruction}\n\nUser Message: {user_text}"
+
         response = ai_client.models.generate_content(
             model="gemini-3.8-flash",
-            contents=user_text,
+            contents=full_prompt,
         )
-        reply_text = response.text if response.text else "Sorry, main iska jawab nahi de paaya."
-        await update.message.reply_text(reply_text)
+        
+        reply_text = response.text if response.text else "Arre arre, kuch samajh nahi aaya, thoda doosre tarike se bolo na! 😅✨"
+        
+        # Send long messages safely without crashing
+        await send_long_message(update, reply_text)
 
     except Exception as e:
         err_msg = str(e)
         logging.error(f"Gemini API Error: {err_msg}")
-        await update.message.reply_text(f"⚠️ **Gemini Error:**\n<code>{html.escape(err_msg)}</code>", parse_mode="HTML")
+        
+        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+            await update.message.reply_text("⏳ Arre yaar, bohot saari requests aa gayi hain! Thoda sa slow ho jao na, 1 minute baad try karna! 😅🙏")
+        else:
+            await update.message.reply_text("💗 Oops! Thoda sa connection issue ho gaya hai, ek baar phir se message bhejo na please! ✨")
 
 
 def main():
     if not BOT_TOKEN or not GEMINI_API_KEY:
-        print("❌ Error: BOT_TOKEN ya GEMINI_API_KEY environment variable missing hai!")
+        print("❌ Error: BOT_TOKEN ya GEMINI_API_KEY missing hai!")
         return
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -210,9 +255,14 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("clear", clear))
     app.add_handler(CallbackQueryHandler(button_handler))
+    
+    # Sticker Handler
+    app.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
+    
+    # Text Handler
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    print("🤖 Gemini Telegram Bot successfully start ho gaya hai!")
+    print("🤖 Gemini Telegram Bot successfully start ho gaya hai! ✨")
     app.run_polling()
 
 
