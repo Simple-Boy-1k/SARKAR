@@ -137,6 +137,24 @@ async def send_long_message(update: Update, text: str):
             await update.message.reply_text(text[i:i+4000])
 
 
+# New Member Welcome Handler (Group mein naye member ke aane par pyara welcome)
+async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.new_chat_members:
+        return
+    
+    for member in update.message.new_chat_members:
+        if member.id == context.bot.id:
+            continue
+        
+        name = member.first_name or "Friend"
+        welcome_messages = [
+            f"✨ Arey dekho kon aaya! Welcome to the group, {name} ji! 🌸💖 Aaram se baitho aur maza lo!",
+            f"Hii {name} ji! 👋 Welcome to our family. Yahan sab mast hain, aap bhi enjoy karo! ✨🌸",
+            f"Welcome {name} ji! 💖 Group ki raunak badhane ke liye shukriya. Chalo ab baatein shuru karo! ✨"
+        ]
+        await update.message.reply_text(random.choice(welcome_messages))
+
+
 # Smart Sticker Reply Handler
 async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.sticker:
@@ -151,7 +169,7 @@ async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(random.choice(responses))
 
 
-# Smart Group & Private Message Handler
+# Smart Group & Private Message Handler (Screenshot Jaisi Playful & Teasing Vibe)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
@@ -184,17 +202,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.chat.send_action(ChatAction.TYPING)
 
     owner_handle = f"@{OWNER_USERNAME}" if OWNER_USERNAME else "Not Set"
+    user_full_name = user.full_name or user.first_name
 
     try:
+        # Screenshot jaisi playful, teasing aur sweet ladki wali tone
         system_prompt = (
-            f"You are a sweet, smart, and expressive Indian girl AI named {me.first_name} on Telegram. "
-            f"Talk like a natural human girl in Hinglish or English using emojis like ✨, 🌸, 🥺, 🙈, 💖, ✌️. "
-            f"Always address the user by their name ({user.first_name}). "
-            f"IMPORTANT RULE FOR BAD WORDS: If the user ({user.first_name}) uses abusive language or vulgar words, do not get angry or use bad language back. Instead, politely and gently scold/teach them like a sensible girl (e.g., '{user.first_name}, aisi gandi baatein nahi bolte na! Achhe bacche achhi bhasha use karte hain 🥺🌸. Aage se aise mat bolna please!'). "
-            f"GROUP OWNER INFO: The group owner username is {owner_handle}. If anyone asks who the owner or admin is, tell them politely that {owner_handle} is the owner."
+            f"You are a cute, witty, and playful Indian girl AI companion named {me.first_name} on Telegram[span_1](start_span)[span_1](end_span). "
+            f"Talk like a natural human girl in Hinglish or English with cute emojis like ✨, 🌸, 🥺, 🤭, 💖, 😘, 🪄. "
+            f"Always address or refer to the user by their full profile name or handle ({user_full_name})[span_2](start_span)[span_2](end_span). "
+            f"BEHAVIOR STYLE: Be slightly teasing, witty, and affectionate (just like a close female friend who loves to pull your leg)[span_3](start_span)[span_3](end_span). For example, if they say 'hello' repeatedly, tease them like 'Kitni baar hello bologe, {user_full_name}? Kuch naya shuru karein ya bas hello hi chalega? ✨[span_4](start_span)'[span_4](end_span). "
+            f"BAD WORDS RULE: If the user uses abusive or vulgar words, don't get angry, gently and cutely scold them (e.g., '{user_full_name}, aisi gandi baatein nahi bolte na! Achhe bacche bano 🥺🌸'). "
+            f"GROUP OWNER INFO: The group owner username is {owner_handle}. If anyone asks who owns this group, tell them politely that {owner_handle} is the owner[span_5](start_span)[span_5](end_span)."
         )
 
-        full_prompt = f"{system_prompt}\n\nUser ({user.first_name}) says: {text}"
+        full_prompt = f"{system_prompt}\n\nUser ({user_full_name}) says: {text}"
 
         response = ai_client.models.generate_content(
             model="gemini-3.8-flash",
@@ -221,6 +242,10 @@ def main():
     app.add_handler(CommandHandler("clear", clear))
     app.add_handler(CallbackQueryHandler(button_handler))
     
+    # New Member Welcome Handler
+    app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_member))
+    
+    # Sticker & Text Handlers
     app.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
